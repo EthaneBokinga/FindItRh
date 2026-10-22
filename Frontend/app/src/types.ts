@@ -32,6 +32,10 @@ export interface Evaluation {
   score: number | null;
   verdict: VerdictKey | null;
   knockoutFailed: string[];
+  evaluatedBy?: string;
+  evaluatedAt?: string;
+  interviewDurationSeconds?: number | null;
+  interviewStartedAt?: string | null;
 }
 
 export interface Candidate {
@@ -58,4 +62,6 @@ export interface CandidateList {
 
 export type EvaluationPayload = Pick<Evaluation, "answers" | "writtenTest" | "photo" | "expectations" | "comments"> & {
   status: "in_progress" | "done";
+  interviewDurationSeconds?: number | null;
+  interviewStartedAt?: string | null;
 };

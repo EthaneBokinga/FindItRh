@@ -116,6 +116,10 @@ export const saveEvaluation = asyncHandler(async (req, res) => {
     ...computeResult(answers),
     evaluatedBy: req.user.email,
     evaluatedAt: new Date(),
+    interviewDurationSeconds: (typeof body.interviewDurationSeconds === "number" && body.interviewDurationSeconds > 0)
+      ? Math.round(body.interviewDurationSeconds)
+      : null,
+    interviewStartedAt: body.interviewStartedAt ? new Date(body.interviewStartedAt) : undefined,
   };
 
   const candidate = await Candidate.findByIdAndUpdate(req.params.id, { $set: { evaluation } }, { new: true }).lean();

@@ -15,7 +15,8 @@ export const googleLogin = asyncHandler(async (req, res) => {
   try {
     const ticket = await client.verifyIdToken({ idToken: credential, audience: env.googleClientId });
     payload = ticket.getPayload();
-  } catch {
+  } catch (err) {
+    console.error("Erreur verifyIdToken:", err?.message || err);
     return res.status(401).json({ message: "Jeton Google invalide" });
   }
 
@@ -26,9 +27,14 @@ export const googleLogin = asyncHandler(async (req, res) => {
   const allowed = !env.allowedEmails.length || env.allowedEmails.includes(email);
   if (!allowed) return res.status(403).json({ message: "Accès réservé aux recruteurs autorisés" });
 
-  const user = { email, name: payload.name || email, picture: payload.picture || "" };
-  const token = jwt.sign(user, env.jwtSecret, { expiresIn: "12h" });
-  res.json({ token, user });
+  try {
+    const user = { email, name: payload.name || email, picture: payload.picture || "" };
+    const token = jwt.sign(user, env.jwtSecret, { expiresIn: "12h" });
+    res.json({ token, user });
+  } catch (err) {
+    console.error("Erreur génération JWT:", err);
+    res.status(500).json({ message: `Erreur de session: ${err.message}` });
+  }
 });
 
 export const me = (req, res) => {

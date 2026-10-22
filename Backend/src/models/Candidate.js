@@ -15,6 +15,8 @@ const evaluationSchema = new Schema(
     knockoutFailed: { type: [String], default: [] },
     evaluatedBy: { type: String, default: "" },
     evaluatedAt: { type: Date },
+    interviewDurationSeconds: { type: Number, default: null },
+    interviewStartedAt: { type: Date },
   },
   { _id: false, minimize: false }
 );

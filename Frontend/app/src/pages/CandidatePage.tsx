@@ -48,27 +48,41 @@ export default function CandidatePage() {
       <main className="page">
         <Link to={ROUTES.candidates} className="back"><ArrowLeft size={18} /> Candidats</Link>
         {error && <p className="error">{error}</p>}
+
         {!candidate || !form ? (!error && <div className="spinner center" />) : (
           <>
+            {/* HERO — responsif corrigé */}
             <div className="hero">
-              <div className="grow">
-                <h2>{candidate.fullName}</h2>
-                <span className="muted">{[candidate.phone, candidate.city].filter(Boolean).join(" · ")}</span>
-                {evaluation?.status === "done" && evaluation.verdict && <div className="badges"><VerdictBadge verdict={evaluation.verdict} /></div>}
+              <div className="hero-info">
+                <h2 className="hero-name">{candidate.fullName}</h2>
+                <span className="muted hero-sub">
+                  {[candidate.phone, candidate.city].filter(Boolean).join(" · ")}
+                </span>
+                {evaluation?.status === "done" && evaluation.verdict && (
+                  <div className="badges mt-xs"><VerdictBadge verdict={evaluation.verdict} /></div>
+                )}
               </div>
-              {evaluation?.score !== null && evaluation?.score !== undefined && (
-                <ScoreRing score={evaluation.score} tone={evaluation.verdict ? ({ good: "good", mid: "mid", low: "low", eliminated: "bad" } as const)[evaluation.verdict] : "low"} />
-              )}
-              {evaluation && <div className="badges"><StatusBadge status={evaluation.status} /></div>}
-              {evaluation?.status === "archived" ? (
-                <button className="btn btn-outline" disabled={busy} onClick={() => changeStatus("restore")}>
-                  <ArchiveRestore size={16} /> Réactiver
-                </button>
-              ) : (
-                <button className="btn btn-outline" disabled={busy} onClick={() => changeStatus("archived")}>
-                  <Archive size={16} /> Archiver
-                </button>
-              )}
+
+              <div className="hero-right">
+                {evaluation?.score != null && (
+                  <ScoreRing
+                    score={evaluation.score}
+                    tone={evaluation.verdict
+                      ? ({ good: "good", mid: "mid", low: "low", eliminated: "bad" } as const)[evaluation.verdict]
+                      : "low"}
+                  />
+                )}
+                {evaluation && <StatusBadge status={evaluation.status} />}
+                {evaluation?.status === "archived" ? (
+                  <button className="btn btn-outline hero-action-btn" disabled={busy} onClick={() => changeStatus("restore")}>
+                    <ArchiveRestore size={16} /> Réactiver
+                  </button>
+                ) : (
+                  <button className="btn btn-outline hero-action-btn" disabled={busy} onClick={() => changeStatus("archived")}>
+                    <Archive size={16} /> Archiver
+                  </button>
+                )}
+              </div>
             </div>
 
             <nav className="tabs" role="tablist">
