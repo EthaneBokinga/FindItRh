@@ -1,10 +1,10 @@
-import { ArrowLeft, FileText, Info, Mic } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowLeft, FileText, Info, Mic } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api";
 import Header from "../components/Header";
 import ScoreRing from "../components/ScoreRing";
-import { VerdictBadge } from "../components/StatusBadge";
+import { StatusBadge, VerdictBadge } from "../components/StatusBadge";
 import { ROUTES } from "../config";
 import type { Candidate, FormConfig } from "../types";
 import CvTab from "./candidate/CvTab";
@@ -24,6 +24,7 @@ export default function CandidatePage() {
   const [form, setForm] = useState<FormConfig | null>(null);
   const [tab, setTab] = useState<TabKey>("info");
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     Promise.all([api.candidate(id), api.form()])
@@ -32,6 +33,14 @@ export default function CandidatePage() {
   }, [id]);
 
   const { evaluation } = candidate ?? {};
+
+  async function changeStatus(status: "archived" | "restore") {
+    if (!candidate) return;
+    setBusy(true); setError("");
+    try { setCandidate(await api.setCandidateStatus(candidate._id, status)); }
+    catch (e) { setError((e as Error).message); }
+    finally { setBusy(false); }
+  }
 
   return (
     <>
@@ -50,6 +59,16 @@ export default function CandidatePage() {
               {evaluation?.score !== null && evaluation?.score !== undefined && (
                 <ScoreRing score={evaluation.score} tone={evaluation.verdict ? ({ good: "good", mid: "mid", low: "low", eliminated: "bad" } as const)[evaluation.verdict] : "low"} />
               )}
+              {evaluation && <div className="badges"><StatusBadge status={evaluation.status} /></div>}
+              {evaluation?.status === "archived" ? (
+                <button className="btn btn-outline" disabled={busy} onClick={() => changeStatus("restore")}>
+                  <ArchiveRestore size={16} /> Réactiver
+                </button>
+              ) : (
+                <button className="btn btn-outline" disabled={busy} onClick={() => changeStatus("archived")}>
+                  <Archive size={16} /> Archiver
+                </button>
+              )}
             </div>
 
             <nav className="tabs" role="tablist">
@@ -60,7 +79,7 @@ export default function CandidatePage() {
               ))}
             </nav>
 
-            {tab === "info" && <InfoTab candidate={candidate} />}
+            {tab === "info" && <InfoTab candidate={candidate} onChange={setCandidate} />}
             {tab === "cv" && <CvTab candidate={candidate} onChange={setCandidate} />}
             {tab === "interview" && <EvaluationTab key={candidate._id} candidate={candidate} form={form} onSaved={setCandidate} />}
           </>

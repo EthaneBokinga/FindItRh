@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "import": "node src/scripts/importExcel.js"
+    "import": "node src/scripts/importExcel.js",
+    "seed:candidates": "node src/scripts/seedCandidates.js",
+    "seed:test": "node src/scripts/seedTest.js",
+    "clean:test": "node src/scripts/cleanTest.js"
   },
   "dependencies": {
     "compression": "^1.7.4",

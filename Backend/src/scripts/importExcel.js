@@ -8,12 +8,14 @@ import { Candidate } from "../models/Candidate.js";
 
 assertEnv(["mongoUri"]);
 
+const DEFAULT_CITY = "Brazzaville";
+
 // Les en-têtes Excel sont normalisés (minuscules, sans accents ni espaces) puis comparés à ces alias.
 // Ajoute simplement un alias si une de tes colonnes n'est pas reconnue.
 const ALIASES = {
-  fullName: ["nom", "nomcomplet", "nometprenom", "nomprenom", "nometprenoms", "prenomnom", "name", "fullname", "candidat"],
+  fullName: ["nom", "noms", "nomcomplet", "nometprenom", "nomprenom", "nometprenoms", "prenomnom", "name", "fullname", "candidat"],
   firstName: ["prenom", "prenoms", "firstname"],
-  phone: ["telephone", "tel", "phone", "numero", "numerotelephone", "contact", "whatsapp", "numerowhatsapp"],
+  phone: ["telephone", "tel", "phone", "numero", "numeros", "numerotelephone", "contact", "whatsapp", "numerowhatsapp"],
   email: ["email", "mail", "adressemail", "adresseemail", "courriel"],
   city: ["ville", "city", "commune"],
   district: ["quartier", "arrondissement", "zone", "adresse", "localisation"],
@@ -41,7 +43,7 @@ if (!dry) await connectDB();
 for (const row of rows) {
   const doc = { extra: {} };
   for (const [header, raw] of Object.entries(row)) {
-    const value = String(raw).trim();
+    const value = String(raw).replace(/\s+/g, " ").trim();
     if (!value) continue;
     const field = fieldOf(header);
     if (field) doc[field] = doc[field] ? `${doc[field]} ${value}` : value;
@@ -52,10 +54,11 @@ for (const row of rows) {
     delete doc.firstName;
   }
   if (!doc.fullName) { skipped++; continue; }
-  if (dry) { created++; continue; }
+  if (!doc.city) doc.city = DEFAULT_CITY;
+  if (dry) { console.log(`  ${doc.fullName} | ${doc.phone || "—"} | ${doc.district || "—"}`); created++; continue; }
 
-  const match = doc.phone ? { phone: doc.phone } : doc.email ? { email: doc.email.toLowerCase() } : { fullName: doc.fullName };
-  const res = await Candidate.updateOne(match, { $set: doc, $setOnInsert: { evaluation: {} } }, { upsert: true });
+  // Le nom complet sert de clé : relancer l'import met à jour sans créer de doublons
+  const res = await Candidate.updateOne({ fullName: doc.fullName }, { $set: doc, $setOnInsert: { evaluation: {} } }, { upsert: true });
   res.upsertedCount ? created++ : updated++;
 }
 

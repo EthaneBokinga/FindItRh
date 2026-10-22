@@ -21,6 +21,10 @@ export const api = {
     return http<CandidateList>(`/candidates?${qs.toString()}`);
   },
   candidate: (id: string) => http<Candidate>(`/candidates/${id}`),
+  updateCandidate: (id: string, info: Partial<Pick<Candidate, "fullName" | "phone" | "email" | "city" | "district">>) =>
+    http<Candidate>(`/candidates/${id}`, { method: "PATCH", body: info }),
+  setCandidateStatus: (id: string, status: "archived" | "restore") =>
+    http<Candidate>(`/candidates/${id}/status`, { method: "PUT", body: { status } }),
   saveEvaluation: (id: string, payload: EvaluationPayload) =>
     http<Candidate>(`/candidates/${id}/evaluation`, { method: "PUT", body: payload }),
   uploadCv: (id: string, file: File) => {

@@ -11,12 +11,13 @@ export const ROUTES = {
   candidate: (id: string) => `/candidates/${id}`,
 } as const;
 
-export const STATUS_LABELS = { pending: "À faire", in_progress: "En cours", done: "Terminé" } as const;
+export const STATUS_LABELS = { pending: "À faire", in_progress: "En cours", done: "Terminé", archived: "Archivé" } as const;
 export const STATUS_FILTERS = [
   { key: "", label: "Tous" },
   { key: "pending", label: STATUS_LABELS.pending },
   { key: "in_progress", label: STATUS_LABELS.in_progress },
   { key: "done", label: STATUS_LABELS.done },
+  { key: "archived", label: STATUS_LABELS.archived },
 ] as const;
 
 export const VERDICTS = {

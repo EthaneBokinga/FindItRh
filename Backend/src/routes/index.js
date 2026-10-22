@@ -2,7 +2,7 @@ import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
 import { googleLogin, me, publicConfig } from "../controllers/auth.controller.js";
 import {
-  cvUpload, getCandidate, getCv, getForm, listCandidates, saveEvaluation, uploadCv,
+  cvUpload, getCandidate, getCv, getForm, listCandidates, saveEvaluation, setCandidateStatus, updateCandidateInfo, uploadCv,
 } from "../controllers/candidates.controller.js";
 
 const router = Router();
@@ -18,6 +18,8 @@ router.get("/auth/me", me);
 router.get("/form", getForm);
 router.get("/candidates", listCandidates);
 router.get("/candidates/:id", getCandidate);
+router.patch("/candidates/:id", updateCandidateInfo);
+router.put("/candidates/:id/status", setCandidateStatus);
 router.put("/candidates/:id/evaluation", saveEvaluation);
 router.post("/candidates/:id/cv", cvUpload, uploadCv);
 router.get("/candidates/:id/cv", getCv);

@@ -1,4 +1,4 @@
-export type Status = "pending" | "in_progress" | "done";
+export type Status = "pending" | "in_progress" | "done" | "archived";
 export type VerdictKey = "good" | "mid" | "low" | "eliminated";
 
 export interface User { email: string; name: string; picture: string }
@@ -53,7 +53,7 @@ export type CandidateListItem = Pick<Candidate, "_id" | "fullName" | "phone" | "
 
 export interface CandidateList {
   items: CandidateListItem[];
-  stats: { total: number; pending: number; in_progress: number; done: number };
+  stats: { total: number; pending: number; in_progress: number; done: number; archived: number };
 }
 
 export type EvaluationPayload = Pick<Evaluation, "answers" | "writtenTest" | "photo" | "expectations" | "comments"> & {

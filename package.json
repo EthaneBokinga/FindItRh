@@ -9,7 +9,10 @@
     "start": "node Backend/src/server.js",
     "dev:api": "npm --prefix Backend run dev",
     "dev:web": "npm --prefix Frontend/app run dev",
-    "import": "npm --prefix Backend run import --"
+    "import": "npm --prefix Backend run import --",
+    "seed:candidates": "npm --prefix Backend run seed:candidates",
+    "seed:test": "npm --prefix Backend run seed:test",
+    "clean:test": "npm --prefix Backend run clean:test"
   },
   "engines": { "node": ">=18" }
 }

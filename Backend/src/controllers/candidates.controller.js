@@ -22,7 +22,9 @@ export const listCandidates = asyncHandler(async (req, res) => {
     const rx = new RegExp(escapeRegex(String(q).trim()), "i");
     filter.$or = [{ fullName: rx }, { phone: rx }, { email: rx }];
   }
-  if (["pending", "in_progress", "done"].includes(status)) filter["evaluation.status"] = status;
+  const STATUSES = ["pending", "in_progress", "done", "archived"];
+  if (STATUSES.includes(status)) filter["evaluation.status"] = status;
+  else filter["evaluation.status"] = { $ne: "archived" }; // par défaut, les archivés sont masqués
 
   const [items, grouped] = await Promise.all([
     Candidate.find(filter)
@@ -33,11 +35,9 @@ export const listCandidates = asyncHandler(async (req, res) => {
     Candidate.aggregate([{ $group: { _id: "$evaluation.status", n: { $sum: 1 } } }]),
   ]);
 
-  const stats = { total: 0, pending: 0, in_progress: 0, done: 0 };
-  grouped.forEach((g) => {
-    stats[g._id] = g.n;
-    stats.total += g.n;
-  });
+  const stats = { total: 0, pending: 0, in_progress: 0, done: 0, archived: 0 };
+  grouped.forEach((g) => { if (g._id in stats) stats[g._id] = g.n; });
+  stats.total = stats.pending + stats.in_progress + stats.done; // les archivés ne comptent pas dans le total
   res.json({ items, stats });
 });
 
@@ -46,6 +46,55 @@ export const getCandidate = asyncHandler(async (req, res) => {
   const candidate = await Candidate.findById(req.params.id).lean();
   if (!candidate) throw httpError(404, "Candidat introuvable");
   res.json(candidate);
+});
+
+// Modification d'informations depuis l'interface recruteur (pas de suppression possible)
+const EDITABLE = {
+  fullName: 120, phone: 60, email: 120, city: 60, district: 160, cvUrl: 500,
+};
+
+export const updateCandidateInfo = asyncHandler(async (req, res) => {
+  assertId(req.params.id);
+  const body = req.body || {};
+  const set = {};
+  for (const [field, max] of Object.entries(EDITABLE)) {
+    if (body[field] === undefined) continue;
+    const value = clip(body[field], max).trim();
+    if (field === "fullName" && !value) throw httpError(400, "Le nom est obligatoire");
+    set[field] = field === "email" ? value.toLowerCase() : value;
+  }
+  if (!Object.keys(set).length) throw httpError(400, "Aucune information à mettre à jour");
+  const candidate = await Candidate.findByIdAndUpdate(req.params.id, { $set: set }, { new: true, runValidators: true }).lean();
+  if (!candidate) throw httpError(404, "Candidat introuvable");
+  res.json(candidate);
+});
+
+// Archiver / réactiver : aucun delete, juste un changement de statut
+const NEXT_STATUSES = ["pending", "in_progress", "done", "archived"];
+
+export const setCandidateStatus = asyncHandler(async (req, res) => {
+  assertId(req.params.id);
+  const { status } = req.body || {};
+  const candidate = await Candidate.findById(req.params.id).lean();
+  if (!candidate) throw httpError(404, "Candidat introuvable");
+
+  let next = status;
+  if (status === "restore") {
+    const ev = candidate.evaluation || {};
+    next = ev.verdict
+      ? "done"
+      : Object.values(ev.answers || {}).some(Boolean) || ev.writtenTest
+        ? "in_progress"
+        : "pending";
+  }
+  if (!NEXT_STATUSES.includes(next)) throw httpError(400, "Statut invalide");
+
+  const updated = await Candidate.findByIdAndUpdate(
+    req.params.id,
+    { $set: { "evaluation.status": next } },
+    { new: true }
+  ).lean();
+  res.json(updated);
 });
 
 export const saveEvaluation = asyncHandler(async (req, res) => {

@@ -4,7 +4,7 @@ const { Schema } = mongoose;
 
 const evaluationSchema = new Schema(
   {
-    status: { type: String, enum: ["pending", "in_progress", "done"], default: "pending" },
+    status: { type: String, enum: ["pending", "in_progress", "done", "archived"], default: "pending" },
     answers: { type: Schema.Types.Mixed, default: {} },
     writtenTest: { type: String, default: "" },
     photo: { type: String, default: "" },
@@ -33,6 +33,8 @@ const candidateSchema = new Schema(
       size: { type: Number, default: 0 },
     },
     extra: { type: Schema.Types.Mixed, default: {} },
+    // "test" pour les candidats de démonstration : supprimés par `npm run clean:test`
+    seedTag: { type: String, default: "" },
     evaluation: { type: evaluationSchema, default: () => ({}) },
   },
   { timestamps: true, minimize: false }
