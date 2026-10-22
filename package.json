@@ -1,0 +1,15 @@
+{
+  "name": "findit-recruit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Find it - application d'entretien des collecteurs de lieux",
+  "scripts": {
+    "install:all": "npm --prefix Backend install && npm --prefix Frontend/app install --include=dev",
+    "build": "npm run install:all && npm --prefix Frontend/app run build",
+    "start": "node Backend/src/server.js",
+    "dev:api": "npm --prefix Backend run dev",
+    "dev:web": "npm --prefix Frontend/app run dev",
+    "import": "npm --prefix Backend run import --"
+  },
+  "engines": { "node": ">=18" }
+}
