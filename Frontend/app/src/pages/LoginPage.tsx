@@ -17,15 +17,20 @@ export default function LoginPage() {
       <section className="login-card">
         <RouteArt />
         <div className="login-form">
-          <img src="/logo.jpeg" alt="Find it" className="login-logo" />
-          <h1>Connexion</h1>
-          <p className="muted">Espace recruteurs · Collecteurs de lieux</p>
+          <div className="login-brand">
+            <img src="/logo.jpeg" alt="Find it" className="login-logo" />
+          </div>
+
+          <div className="login-copy">
+            <h1 className="login-title">Bienvenue</h1>
+            <p className="login-subtitle">Espace recruteurs · Collecteurs de lieux</p>
+          </div>
 
           <div className="google-wrap">
             <GoogleLogin
               shape="pill"
               size="large"
-              width="280"
+              width="290"
               text="continue_with"
               onSuccess={async (res) => {
                 if (!res.credential) return;
@@ -38,9 +43,21 @@ export default function LoginPage() {
               onError={() => setError("Connexion Google annulée ou impossible")}
             />
           </div>
-          {busy && <p className="muted">Vérification…</p>}
-          {error && <p className="error" role="alert">{error}</p>}
+
+          {busy && (
+            <div className="login-loading">
+              <div className="login-spinner" />
+              <span>Vérification…</span>
+            </div>
+          )}
+
+          {error && <p className="error login-error" role="alert">{error}</p>}
+
           <p className="login-note">Accès réservé aux recruteurs Find it autorisés.</p>
+
+          <div className="login-footer-dots">
+            <span /><span /><span />
+          </div>
         </div>
       </section>
     </main>

@@ -1,4 +1,4 @@
-import { ChevronRight, Search } from "lucide-react";
+import { ChevronRight, Search, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
@@ -6,6 +6,31 @@ import Header from "../components/Header";
 import { StatusBadge, VerdictBadge } from "../components/StatusBadge";
 import { ROUTES, SEARCH_DEBOUNCE_MS, STATUS_FILTERS } from "../config";
 import type { CandidateList } from "../types";
+
+const VERDICT_COLORS: Record<string, string> = {
+  good: "#0ba67c",
+  mid: "#e0932b",
+  low: "#d64545",
+  eliminated: "#d64545",
+};
+
+function ScoreBadge({ score, verdict }: { score: number | null; verdict: string | null }) {
+  if (score === null || score === undefined) return null;
+  const color = verdict ? VERDICT_COLORS[verdict] ?? "#6b7a72" : "#6b7a72";
+  return (
+    <div className="card-score-badge" style={{ background: color }}>
+      {score}
+    </div>
+  );
+}
+
+function InitialsAvatar({ name }: { name: string }) {
+  const parts = name.trim().split(/\s+/);
+  const initials = parts.length >= 2
+    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+    : name.slice(0, 2).toUpperCase();
+  return <div className="candidate-avatar">{initials}</div>;
+}
 
 export default function CandidatesPage() {
   const [q, setQ] = useState("");
@@ -15,7 +40,9 @@ export default function CandidatesPage() {
 
   useEffect(() => {
     const t = setTimeout(() => {
-      api.candidates({ q, status }).then((d) => { setData(d); setError(""); }).catch((e: Error) => setError(e.message));
+      api.candidates({ q, status })
+        .then((d) => { setData(d); setError(""); })
+        .catch((e: Error) => setError(e.message));
     }, SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(t);
   }, [q, status]);
@@ -24,23 +51,67 @@ export default function CandidatesPage() {
     <>
       <Header />
       <main className="page">
-        <h2>Candidats</h2>
+        {/* Titre section */}
+        <div className="page-header">
+          <div className="page-header-left">
+            <h2 className="page-title">Candidats</h2>
+            {data && (
+              <span className="page-count">{data.stats.total} enregistrés</span>
+            )}
+          </div>
+        </div>
+
+        {/* Stats */}
         {data && (
-          <div className="stats">
-            <div><strong>{data.stats.total}</strong><span>Total</span></div>
-            <div><strong>{data.stats.done}</strong><span>Terminés</span></div>
-            <div><strong>{data.stats.in_progress + data.stats.pending}</strong><span>Restants</span></div>
+          <div className="stats-grid">
+            <div className="stat-card stat-total">
+              <div className="stat-icon"><Users size={18} /></div>
+              <div>
+                <strong>{data.stats.total}</strong>
+                <span>Total</span>
+              </div>
+            </div>
+            <div className="stat-card stat-done">
+              <div className="stat-icon">✔</div>
+              <div>
+                <strong>{data.stats.done}</strong>
+                <span>Terminés</span>
+              </div>
+            </div>
+            <div className="stat-card stat-pending">
+              <div className="stat-icon">⏳</div>
+              <div>
+                <strong>{data.stats.in_progress + data.stats.pending}</strong>
+                <span>Restants</span>
+              </div>
+            </div>
           </div>
         )}
 
-        <label className="search">
-          <Search size={18} />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nom, téléphone ou email…" inputMode="search" />
+        {/* Recherche */}
+        <label className="search-bar">
+          <Search size={17} className="search-icon" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Rechercher un candidat…"
+            inputMode="search"
+          />
+          {q && (
+            <button className="search-clear" onClick={() => setQ("")} aria-label="Effacer">
+              ×
+            </button>
+          )}
         </label>
 
-        <div className="chips">
+        {/* Filtres — scrollable horizontalement sur mobile */}
+        <div className="filter-bar" role="group" aria-label="Filtrer par statut">
           {STATUS_FILTERS.map((f) => (
-            <button key={f.key} className={`chip ${status === f.key ? "active" : ""}`} onClick={() => setStatus(f.key)}>
+            <button
+              key={f.key}
+              className={`filter-chip ${status === f.key ? "active" : ""}`}
+              onClick={() => setStatus(f.key)}
+            >
               {f.label}
             </button>
           ))}
@@ -48,22 +119,37 @@ export default function CandidatesPage() {
 
         {error && <p className="error">{error}</p>}
         {!data && !error && <div className="spinner center" />}
-        {data?.items.length === 0 && <p className="muted center-text">Aucun candidat trouvé.</p>}
+        {data?.items.length === 0 && (
+          <div className="empty-state">
+            <div className="empty-icon">🔍</div>
+            <p>Aucun candidat trouvé.</p>
+          </div>
+        )}
 
-        <ul className="list">
+        <ul className="candidate-list">
           {data?.items.map((c) => (
             <li key={c._id}>
-              <Link to={ROUTES.candidate(c._id)} className="card row">
-                <div className="grow">
-                  <strong>{c.fullName}</strong>
-                  <span className="muted small">{[c.phone, c.city || c.district].filter(Boolean).join(" · ")}</span>
-                  <div className="badges">
-                    <StatusBadge status={c.evaluation.status} />
-                    {c.evaluation.status === "done" && c.evaluation.verdict && <VerdictBadge verdict={c.evaluation.verdict} />}
+              <Link to={ROUTES.candidate(c._id)} className="candidate-card">
+                {/* Score en haut à droite */}
+                <ScoreBadge score={c.evaluation.score} verdict={c.evaluation.verdict} />
+
+                <div className="candidate-card-body">
+                  <InitialsAvatar name={c.fullName} />
+                  <div className="candidate-card-info">
+                    <strong className="candidate-name">{c.fullName}</strong>
+                    <span className="candidate-meta">
+                      {[c.phone, c.city || c.district].filter(Boolean).join(" · ")}
+                    </span>
+                    <div className="candidate-badges">
+                      <StatusBadge status={c.evaluation.status} />
+                      {c.evaluation.status === "done" && c.evaluation.verdict && (
+                        <VerdictBadge verdict={c.evaluation.verdict} />
+                      )}
+                    </div>
                   </div>
                 </div>
-                {c.evaluation.score !== null && <span className="score-pill">{c.evaluation.score}</span>}
-                <ChevronRight size={18} className="muted" />
+
+                <ChevronRight size={18} className="candidate-arrow" />
               </Link>
             </li>
           ))}
