@@ -1,4 +1,4 @@
-import { ChevronRight, Search, Users } from "lucide-react";
+import { CheckCircle2, ChevronRight, Clock, Search, UserX, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
@@ -65,21 +65,21 @@ export default function CandidatesPage() {
         {data && (
           <div className="stats-grid">
             <div className="stat-card stat-total">
-              <div className="stat-icon"><Users size={18} /></div>
+              <div className="stat-icon"><Users size={20} /></div>
               <div>
                 <strong>{data.stats.total}</strong>
                 <span>Total</span>
               </div>
             </div>
             <div className="stat-card stat-done">
-              <div className="stat-icon">✔</div>
+              <div className="stat-icon"><CheckCircle2 size={20} /></div>
               <div>
                 <strong>{data.stats.done}</strong>
                 <span>Terminés</span>
               </div>
             </div>
             <div className="stat-card stat-pending">
-              <div className="stat-icon">⏳</div>
+              <div className="stat-icon"><Clock size={20} /></div>
               <div>
                 <strong>{data.stats.in_progress + data.stats.pending}</strong>
                 <span>Restants</span>
@@ -99,7 +99,7 @@ export default function CandidatesPage() {
           />
           {q && (
             <button className="search-clear" onClick={() => setQ("")} aria-label="Effacer">
-              ×
+              <X size={14} />
             </button>
           )}
         </label>
@@ -121,7 +121,7 @@ export default function CandidatesPage() {
         {!data && !error && <div className="spinner center" />}
         {data?.items.length === 0 && (
           <div className="empty-state">
-            <div className="empty-icon">🔍</div>
+            <div className="empty-icon"><UserX size={40} className="muted" /></div>
             <p>Aucun candidat trouvé.</p>
           </div>
         )}
